@@ -236,7 +236,6 @@ function render(){
       <div class="big">${fmt(cT)} <span class="small">/ 目標 ${fmt(tT)} pt</span></div>
       <div class="bar"><div style="width:${pct(cT,tT)}%;background:var(--ok)"></div></div>
       <div><b>達成率 ${pct(cT,tT).toFixed(1)}%</b> <span class="small">あと ${fmt(Math.max(0,tT-cT))} pt</span></div>
-      ${ct>0?`<div style="color:var(--ng);font-size:13px;margin-top:4px">⚠ ${longer}が多すぎます。${longer}の ${fmt(ct)}pt は合計に入りません（短い方の3倍まで）。短い方を増やしましょう。</div>`:''}
       </div>`})()}
     <div class="kpis">
       <div class="kpi"><span class="small">期限まで</span><b>${daysLeft}日</b></div>
@@ -305,8 +304,6 @@ function renderAdvice(D){
      ${nextW!=null?`、来週は <b>+${fmt(nextW)}pt</b>`:''}<br>
      <span class="small">当初計画 +${fmt(orig)}pt に対して ${diff>0?`<b style="color:var(--ng)">${fmt(diff)}pt 上乗せ</b>が必要`:(diff<0?`<b style="color:var(--ok)">${fmt(-diff)}pt 余裕あり</b>`:'ちょうど計画どおり')}</span></div>`;
   });
-  if(cut(D.curL,D.curR)>0){const lg=D.curL>D.curR?'左':'右',sh=D.curL>D.curR?'右':'左';
-    h+=`<div class="box" style="border-color:var(--ng)"><b>1：3ルール注意</b>：${lg}が多く、${fmt(cut(D.curL,D.curR))}pt が合計に入っていません。${sh}を増やすと合計が伸びます（${sh}を+1pt増やすと合計は最大+4pt）。</div>`}
   // monthly view
   const cm=months.find(m=>m.weeks.some(w=>w.cur))||months.find(m=>m.st!=='達成'&&m.st!=='未達成');
   if(cm){const fL=Math.max(0,cm.tL-cm.aL),fR=Math.max(0,cm.tR-cm.aR);
