@@ -69,10 +69,10 @@ button.act.gray{background:var(--sub)}
       <div><label>目標の期限（月）</label><input id="deadline" type="month"></div>
     </div>
     <div class="grid" style="margin-top:10px">
-      <div><label>開始時点 左(pt)</label><input id="startL" type="number" step="0.5"></div>
-      <div><label>開始時点 右(pt)</label><input id="startR" type="number" step="0.5"></div>
-      <div><label>目標 左(pt)</label><input id="targetL" type="number" step="0.5"></div>
-      <div><label>目標 右(pt)</label><input id="targetR" type="number" step="0.5"></div>
+      <div><label>開始時点 左(pt)</label><input id="startL" type="number" step="0.5" placeholder="例：0"></div>
+      <div><label>開始時点 右(pt)</label><input id="startR" type="number" step="0.5" placeholder="例：0"></div>
+      <div><label>目標 左(pt)</label><input id="targetL" type="number" step="0.5" placeholder="例：50"></div>
+      <div><label>目標 右(pt)</label><input id="targetR" type="number" step="0.5" placeholder="例：150"></div>
     </div>
     <p class="small">※ 月ごと・週ごとの目標は自動で作られます（後半ほど伸びる配分）。週ごとの獲得ポイントは下の表に入力してください。</p>
   </section>
@@ -120,9 +120,12 @@ const eff=(l,r)=>{const s=Math.min(l,r),g=Math.max(l,r);return s+Math.min(g,3*s)
 const cut=(l,r)=>{const s=Math.min(l,r),g=Math.max(l,r);return Math.max(0,g-3*s)};
 
 const today0=new Date();const TODAY=new Date(today0.getFullYear(),today0.getMonth(),today0.getDate());
-const def={name:'',startDate:iso(TODAY),startL:27.5,startR:66,targetL:50,targetR:150,deadline:'2027-02',actual:{},theme:'clean'};
+const def={name:'',startDate:iso(TODAY),startL:'',startR:'',targetL:'',targetR:'',deadline:'2027-02',actual:{},theme:'clean'};
 let S;
 try{S=Object.assign({},def,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){S=Object.assign({},def)}
+// 以前の初期値（27.5/66/50/150）のまま何も入力していない保存データは、空にリセット
+if(+S.startL===27.5&&+S.startR===66&&+S.targetL===50&&+S.targetR===150&&!S.name&&!Object.keys(S.actual||{}).length){
+  Object.assign(S,{startL:'',startR:'',targetL:'',targetR:''})}
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
 
 function compute(){
@@ -241,6 +244,10 @@ function render(){
      <td><input type="number" step="0.5" class="${w.ovR?'ov':''}" data-p="r" data-k="${w.key}" value="${fmt(w.tR)}"></td><td><input type="number" step="0.5" data-k="${w.key}" data-s="r" value="${w.ar??''}"></td>
      <td>${fmt(w.acL)} / ${fmt(w.acR)}</td><td><b>${fmt(w.acT)}</b></td><td>${tag(w.st)}</td></tr>`})});
   $('weekTbl').innerHTML=h+'</table>';
+  if(!(+S.targetL||+S.targetR)){
+    $('summary').innerHTML='<h2>はじめに</h2><p>上の「① 目標設定」に、お名前・開始時点のポイント・目標ポイント・期限を入力してください。入力すると、ここに達成状況が表示されます。</p>';
+    $('advice').innerHTML='<h2>⑥ 今週・来週に向けて（自動アドバイス）</h2><p class="small">目標を入力すると、ここにアドバイスが表示されます。</p>';
+  }
   document.querySelectorAll('#weekTbl input').forEach(i=>i.addEventListener('change',e=>{
     if(e.target.value!=='')e.target.value=r05(+e.target.value);
     const k=e.target.dataset.k,s=e.target.dataset.s,p=e.target.dataset.p;
