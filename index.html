@@ -48,6 +48,29 @@ svg{width:100%;height:auto;display:block}
 .advice .box.r{border-color:var(--R)}
 button.act{background:var(--L);color:#fff;border:0;border-radius:8px;padding:7px 14px;cursor:pointer;font-size:13px;margin:4px 4px 0 0}
 button.act.gray{background:var(--sub)}
+td.ttl{text-align:left;font-weight:bold}
+td.ttl .tag{display:none}
+td.st{display:table-cell}
+@media(max-width:700px){
+  body{overflow-x:hidden}
+  main{padding:10px}.card{padding:12px}
+  .scroll{overflow:visible}
+  table,tbody,tr,td{display:block;width:100%}
+  tr:first-child:has(th){display:none}
+  tr{border:1px solid var(--line);border-radius:10px;margin-bottom:10px;padding:6px 10px;background:var(--card)}
+  tr.cur{border-color:var(--now);border-width:2px}
+  tr.mrow{border:0;padding:4px 0;background:none}
+  tr.mrow td{background:none;padding:6px 0;font-size:15px}
+  td{display:flex;justify-content:space-between;align-items:center;border:0;border-bottom:1px dashed var(--line);padding:6px 0;white-space:normal;text-align:right;font-size:15px}
+  td:last-child{border-bottom:0}
+  td[data-l]::before{content:attr(data-l);color:var(--sub);font-size:13px;text-align:left}
+  td.ttl{font-size:16px;border-bottom:1px solid var(--line);justify-content:space-between}
+  td.st{display:none}
+  td.ttl .tag{display:inline-block}
+  td input{width:110px;font-size:17px;padding:8px}
+  input{font-size:16px}
+  .big{font-size:28px}
+}
 .legend span{margin-right:12px;font-size:12px}
 .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px}
 </style>
@@ -101,6 +124,7 @@ button.act.gray{background:var(--sub)}
   </section>
 </main>
 <script>
+const FS=window.innerWidth<700?19:11;
 const KEY='nakagawa-omura-pt-v1';
 const $=id=>document.getElementById(id);
 const pad=n=>String(n).padStart(2,'0');
@@ -235,14 +259,14 @@ function render(){
   // ---- month table
   $('monthTbl').innerHTML=`<table><tr><th>月</th><th>左 目標</th><th>左 実績</th><th>右 目標</th><th>右 実績</th><th>月末の目標(左/右)</th><th>月末の合計目標(1:3)</th><th>結果</th></tr>`+
    months.map(m=>{const last=m.weeks[m.weeks.length-1];
-    return `<tr><td>${+m.ym.slice(5)}月</td><td>+${fmt(m.tL)}</td><td class="L"><b>${sgn(m.aL)}</b></td><td>+${fmt(m.tR)}</td><td class="R"><b>${sgn(m.aR)}</b></td><td>${fmt(last.pcL)} / ${fmt(last.pcR)}</td><td>${fmt(last.pcT)}</td><td>${tag(m.st)}</td></tr>`}).join('')+`</table>`;
+    return `<tr><td class="ttl">${+m.ym.slice(5)}月 ${tag(m.st)}</td><td data-l="左 目標">+${fmt(m.tL)}</td><td class="L" data-l="左 実績"><b>${sgn(m.aL)}</b></td><td data-l="右 目標">+${fmt(m.tR)}</td><td class="R" data-l="右 実績"><b>${sgn(m.aR)}</b></td><td data-l="月末の目標(左/右)">${fmt(last.pcL)} / ${fmt(last.pcR)}</td><td data-l="月末の合計目標(1:3)">${fmt(last.pcT)}</td><td class="st">${tag(m.st)}</td></tr>`}).join('')+`</table>`;
   // ---- week table
   let h=`<table><tr><th>週</th><th>左 目標</th><th>左 獲得</th><th>右 目標</th><th>右 獲得</th><th>累計(左/右)</th><th>合計(1:3)</th><th>結果</th></tr>`;
   months.forEach(m=>{h+=`<tr class="mrow"><td colspan="8">${+m.ym.slice(5)}月（目標 左+${fmt(m.tL)} / 右+${fmt(m.tR)}）</td></tr>`;
-    m.weeks.forEach(w=>{h+=`<tr class="${w.cur?'cur':''}"><td>${md(w.mon)}〜${md(w.end)}${w.cur?' ◀今週':''}</td>
-     <td><input type="number" step="0.5" class="${w.ovL?'ov':''}" data-p="l" data-k="${w.key}" value="${fmt(w.tL)}"></td><td><input type="number" step="0.5" data-k="${w.key}" data-s="l" value="${w.al??''}"></td>
-     <td><input type="number" step="0.5" class="${w.ovR?'ov':''}" data-p="r" data-k="${w.key}" value="${fmt(w.tR)}"></td><td><input type="number" step="0.5" data-k="${w.key}" data-s="r" value="${w.ar??''}"></td>
-     <td>${fmt(w.acL)} / ${fmt(w.acR)}</td><td><b>${fmt(w.acT)}</b></td><td>${tag(w.st)}</td></tr>`})});
+    m.weeks.forEach(w=>{h+=`<tr class="${w.cur?'cur':''}"><td class="ttl">${md(w.mon)}〜${md(w.end)}${w.cur?' ◀今週':''} ${tag(w.st)}</td>
+     <td data-l="左 目標"><input type="number" inputmode="decimal" step="0.5" class="${w.ovL?'ov':''}" data-p="l" data-k="${w.key}" value="${fmt(w.tL)}"></td><td data-l="左 獲得"><input type="number" inputmode="decimal" step="0.5" data-k="${w.key}" data-s="l" value="${w.al??''}"></td>
+     <td data-l="右 目標"><input type="number" inputmode="decimal" step="0.5" class="${w.ovR?'ov':''}" data-p="r" data-k="${w.key}" value="${fmt(w.tR)}"></td><td data-l="右 獲得"><input type="number" inputmode="decimal" step="0.5" data-k="${w.key}" data-s="r" value="${w.ar??''}"></td>
+     <td data-l="累計(左/右)">${fmt(w.acL)} / ${fmt(w.acR)}</td><td data-l="合計(1:3)"><b>${fmt(w.acT)}</b></td><td class="st">${tag(w.st)}</td></tr>`})});
   $('weekTbl').innerHTML=h+'</table>';
   if(!(+S.targetL||+S.targetR)){
     $('summary').innerHTML='<h2>はじめに</h2><p>上の「① 目標設定」に、お名前・開始時点のポイント・目標ポイント・期限を入力してください。入力すると、ここに達成状況が表示されます。</p>';
@@ -292,13 +316,13 @@ function renderAdvice(D){
 }
 
 function line(labels,planned,act,target,k){
-  const W=640,H=270,pl=44,pr=14,pt=14,pb=34, n=labels.length;
+  const W=640,H=270,pl=48,pr=14,pt=FS+14,pb=36, n=labels.length;
   const vals=[...planned,...act.filter(v=>v!=null),target];
   let mn=Math.min(...vals),mx=Math.max(...vals);const sp=(mx-mn)||1;mn=Math.floor(mn-sp*.05);mx=Math.ceil(mx+sp*.08);
   const X=i=>pl+(W-pl-pr)*(n>1?i/(n-1):0), Y=v=>pt+(H-pt-pb)*(1-(v-mn)/(mx-mn));
-  let s=`<svg viewBox="0 0 ${W} ${H}"><text x="${pl}" y="11" font-size="12" fill="var(--sub)">${k==='L'?'左':'右'}（目標 ${fmt(target)}pt）</text>`;
-  for(let i=0;i<=4;i++){const v=mn+(mx-mn)*i/4,y=Y(v);s+=`<line x1="${pl}" x2="${W-pr}" y1="${y}" y2="${y}" stroke="var(--line)"/><text x="${pl-5}" y="${y+4}" font-size="11" text-anchor="end" fill="var(--sub)">${Math.round(v)}</text>`}
-  const step=Math.ceil(n/8);labels.forEach((l,i)=>{if(i%step===0||i===n-1)s+=`<text x="${X(i)}" y="${H-12}" font-size="10.5" text-anchor="middle" fill="var(--sub)">${l}</text>`});
+  let s=`<svg viewBox="0 0 ${W} ${H}"><text x="${pl}" y="${FS+2}" font-size="${FS+1}" fill="var(--sub)">${k==='L'?'左':'右'}（目標 ${fmt(target)}pt）</text>`;
+  for(let i=0;i<=4;i++){const v=mn+(mx-mn)*i/4,y=Y(v);s+=`<line x1="${pl}" x2="${W-pr}" y1="${y}" y2="${y}" stroke="var(--line)"/><text x="${pl-5}" y="${y+4}" font-size="${FS}" text-anchor="end" fill="var(--sub)">${Math.round(v)}</text>`}
+  const step=Math.ceil(n/8);labels.forEach((l,i)=>{if(i%step===0||i===n-1)s+=`<text x="${X(i)}" y="${H-12}" font-size="${FS}" text-anchor="middle" fill="var(--sub)">${l}</text>`});
   s+=`<line x1="${pl}" x2="${W-pr}" y1="${Y(target)}" y2="${Y(target)}" stroke="var(--ok)" stroke-dasharray="3 4"/>`;
   s+=`<polyline fill="none" stroke="var(--sub)" stroke-opacity=".6" stroke-width="2" stroke-dasharray="6 4" points="${planned.map((v,i)=>X(i)+','+Y(v)).join(' ')}"/>`;
   const pts=act.map((v,i)=>v==null?null:[X(i),Y(v)]).filter(Boolean);
@@ -307,17 +331,17 @@ function line(labels,planned,act,target,k){
   return s+'</svg>';
 }
 function bars(labels,tg,ac,k,weeks){
-  const W=640,H=250,pl=40,pr=10,pt=14,pb=34,n=labels.length;
+  const W=640,H=250,pl=44,pr=10,pt=FS+14,pb=36,n=labels.length;
   const mx=Math.max(1,...tg,...ac.map(v=>v||0))*1.15;
   const gw=(W-pl-pr)/n, bw=Math.min(18,gw*.38), Y=v=>pt+(H-pt-pb)*(1-v/mx);
-  let s=`<svg viewBox="0 0 ${W} ${H}"><text x="${pl}" y="11" font-size="12" fill="var(--sub)">${k==='L'?'左':'右'}：週ごとの 目標(薄) と 獲得(濃)</text>`;
-  for(let i=0;i<=3;i++){const v=mx*i/3,y=Y(v);s+=`<line x1="${pl}" x2="${W-pr}" y1="${y}" y2="${y}" stroke="var(--line)"/><text x="${pl-5}" y="${y+4}" font-size="11" text-anchor="end" fill="var(--sub)">${Math.round(v)}</text>`}
+  let s=`<svg viewBox="0 0 ${W} ${H}"><text x="${pl}" y="${FS+2}" font-size="${FS+1}" fill="var(--sub)">${k==='L'?'左':'右'}：週ごとの 目標(薄) と 獲得(濃)</text>`;
+  for(let i=0;i<=3;i++){const v=mx*i/3,y=Y(v);s+=`<line x1="${pl}" x2="${W-pr}" y1="${y}" y2="${y}" stroke="var(--line)"/><text x="${pl-5}" y="${y+4}" font-size="${FS}" text-anchor="end" fill="var(--sub)">${Math.round(v)}</text>`}
   const step=Math.ceil(n/10);
   labels.forEach((l,i)=>{const cx=pl+gw*(i+.5);
     s+=`<rect x="${cx-bw-1}" y="${Y(tg[i])}" width="${bw}" height="${Y(0)-Y(tg[i])}" fill="var(--${k})" opacity=".3" rx="2"/>`;
     const a=ac[i];if(a!=null){const good=a>=tg[i]-1e-9;s+=`<rect x="${cx+1}" y="${Y(a)}" width="${bw}" height="${Math.max(1,Y(0)-Y(a))}" fill="var(--${k})" rx="2"/>`;
-      s+=`<text x="${cx+1+bw/2}" y="${Y(a)-3}" font-size="10" text-anchor="middle" fill="var(${good?'--ok':'--ng'})">${good?'○':'×'}</text>`}
-    if(i%step===0)s+=`<text x="${cx}" y="${H-12}" font-size="10.5" text-anchor="middle" fill="var(--sub)">${l}</text>`});
+      s+=`<text x="${cx+1+bw/2}" y="${Y(a)-3}" font-size="${FS-1}" text-anchor="middle" fill="var(${good?'--ok':'--ng'})">${good?'○':'×'}</text>`}
+    if(i%step===0)s+=`<text x="${cx}" y="${H-12}" font-size="${FS}" text-anchor="middle" fill="var(--sub)">${l}</text>`});
   return s+'</svg>';
 }
 
