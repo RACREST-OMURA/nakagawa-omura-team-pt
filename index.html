@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>中川大村チーム ポイント管理</title>
+<style>
+:root{--bg:#f5f7fb;--card:#fff;--text:#1f2937;--sub:#6b7280;--line:#e5e7eb;--L:#2563eb;--R:#f97316;--ok:#16a34a;--ng:#dc2626;--now:#ca8a04;--head:#1e3a8a;--headtxt:#fff;--radius:14px}
+[data-theme=dark]{--bg:#0f172a;--card:#1e293b;--text:#e5e7eb;--sub:#94a3b8;--line:#334155;--L:#38bdf8;--R:#fb923c;--ok:#4ade80;--ng:#f87171;--now:#facc15;--head:#020617;--headtxt:#f8fafc}
+[data-theme=warm]{--bg:#fbf5ea;--card:#fffdf8;--text:#4a3b2a;--sub:#8a7a66;--line:#eadfca;--L:#0f766e;--R:#c2410c;--ok:#15803d;--ng:#b91c1c;--now:#a16207;--head:#7c4a1e;--headtxt:#fff8ec;--radius:22px}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Yu Gothic UI","Meiryo",sans-serif;line-height:1.6}
+header{background:var(--head);color:var(--headtxt);padding:18px 16px;text-align:center}
+header h1{margin:0;font-size:clamp(20px,5vw,30px);letter-spacing:.05em}
+header .sub{font-size:13px;opacity:.85;margin-top:2px}
+.themes{margin-top:8px;font-size:12px}
+.themes button{background:transparent;color:inherit;border:1px solid currentColor;border-radius:99px;padding:2px 12px;margin:0 3px;cursor:pointer;font-size:12px;opacity:.7}
+.themes button.on{opacity:1;background:rgba(255,255,255,.2);font-weight:bold}
+main{max-width:1000px;margin:0 auto;padding:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.card h2{margin:0 0 10px;font-size:17px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+label{font-size:12px;color:var(--sub);display:block}
+input{width:100%;padding:7px 8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text);font-size:15px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:700px){.two{grid-template-columns:1fr}}
+.big{font-size:32px;font-weight:bold;line-height:1.1}
+.L{color:var(--L)}.R{color:var(--R)}
+.bar{height:20px;background:var(--line);border-radius:99px;overflow:hidden;margin:6px 0}
+.bar>div{height:100%;border-radius:99px;transition:width .4s}
+.small{font-size:12px;color:var(--sub)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-top:10px}
+.kpi{background:var(--bg);border-radius:10px;padding:8px 10px}
+.kpi b{display:block;font-size:18px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:6px 5px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
+th{color:var(--sub);font-weight:normal;font-size:12px}
+.scroll{overflow-x:auto}
+td input{width:70px;padding:4px;text-align:right}
+td input.ov{background:rgba(250,204,21,.3);border-color:var(--now);font-weight:bold}
+tr.cur{background:rgba(250,204,21,.12)}
+tr.mrow td{background:var(--bg);font-weight:bold;text-align:left}
+.tag{display:inline-block;padding:1px 9px;border-radius:99px;font-size:11px;color:#fff}
+.t-ok{background:var(--ok)}.t-ng{background:var(--ng)}.t-now{background:var(--now)}.t-wait{background:var(--sub)}
+svg{width:100%;height:auto;display:block}
+.advice p{margin:4px 0}
+.advice .box{background:var(--bg);border-left:4px solid var(--L);border-radius:8px;padding:8px 12px;margin:8px 0}
+.advice .box.r{border-color:var(--R)}
+button.act{background:var(--L);color:#fff;border:0;border-radius:8px;padding:7px 14px;cursor:pointer;font-size:13px;margin:4px 4px 0 0}
+button.act.gray{background:var(--sub)}
+.legend span{margin-right:12px;font-size:12px}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px}
+</style>
+</head>
+<body>
+<header>
+  <h1>【中川大村チーム】</h1>
+  <div class="sub">バイナリー ポイント管理シート</div>
+  <div class="themes">デザイン：
+    <button data-t="clean">A クリーン</button><button data-t="dark">B ダーク</button><button data-t="warm">C あたたか</button>
+  </div>
+</header>
+<main>
+  <section class="card" id="settings">
+    <h2>① 目標設定</h2>
+    <div class="grid">
+      <div><label>お名前</label><input id="name" placeholder="例：大村"></div>
+      <div><label>開始日（今日）</label><input id="startDate" type="date"></div>
+      <div><label>目標の期限（月）</label><input id="deadline" type="month"></div>
+    </div>
+    <div class="grid" style="margin-top:10px">
+      <div><label>開始時点 左(pt)</label><input id="startL" type="number" step="0.5"></div>
+      <div><label>開始時点 右(pt)</label><input id="startR" type="number" step="0.5"></div>
+      <div><label>目標 左(pt)</label><input id="targetL" type="number" step="0.5"></div>
+      <div><label>目標 右(pt)</label><input id="targetR" type="number" step="0.5"></div>
+    </div>
+    <p class="small">※ 月ごと・週ごとの目標は自動で作られます（後半ほど伸びる配分）。週ごとの獲得ポイントは下の表に入力してください。</p>
+  </section>
+
+  <section class="card" id="summary"></section>
+  <section class="card"><h2>② 月ごとの結果</h2><div class="scroll" id="monthTbl"></div></section>
+  <section class="card"><h2>③ 週ごとの目標・結果入力</h2>
+    <p class="small">「目標」欄は自動で入っています。人数が増えるなど自分のペースに合わせて<b>直接書き換え</b>できます（色が付いた欄が手動変更。空欄にすると自動に戻ります）。「獲得」欄には、その週に増えたポイントを入力します（累計ではなく増えた分）。</p>
+    <div class="scroll" id="weekTbl"></div>
+  </section>
+  <section class="card"><h2>④ 週ごとの目標と実績（棒グラフ）</h2>
+    <div class="two"><div id="bL"></div><div id="bR"></div></div>
+  </section>
+  <section class="card"><h2>⑤ 推移グラフ（累計）</h2>
+    <div class="legend"><span><i class="dot" style="background:var(--sub);opacity:.5"></i>計画</span><span><i class="dot" style="background:var(--L)"></i>実績（左）</span><span><i class="dot" style="background:var(--R)"></i>実績（右）</span></div>
+    <div class="two"><div id="cL"></div><div id="cR"></div></div>
+  </section>
+  <section class="card advice" id="advice"></section>
+  <section class="card"><h2>データ管理</h2>
+    <p class="small">データはこのパソコン（ブラウザ）内に自動保存されます。別の端末に移すときは書き出し→読み込みをしてください。</p>
+    <button class="act" id="exp">データを書き出す</button>
+    <button class="act" id="imp">データを読み込む</button>
+    <button class="act gray" id="rstp">週目標の手動変更をすべて自動に戻す</button>
+    <button class="act gray" id="rst">入力した獲得ポイントをリセット</button>
+    <input type="file" id="file" accept=".json" style="display:none">
+  </section>
+</main>
+<script>
+const KEY='nakagawa-omura-pt-v1';
+const $=id=>document.getElementById(id);
+const pad=n=>String(n).padStart(2,'0');
+const iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const parse=s=>{const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
+const addD=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const mondayOf=d=>{const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());x.setDate(x.getDate()-((x.getDay()+6)%7));return x};
+const md=d=>(d.getMonth()+1)+'/'+d.getDate();
+const r1=x=>Math.round(x*10)/10;
+const fmt=n=>{n=r1(n);return Number.isInteger(n)?String(n):n.toFixed(1)};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const sgn=n=>(n>0?'+':'')+fmt(n);
+const r05=x=>Math.round(x*2)/2;          // 0.5pt刻みに丸める
+const c05=x=>Math.ceil(x*2-1e-9)/2;      // 0.5pt刻みで切り上げ
+// 1:3ルール：短い方の3倍までしか長い方は有効にならない
+const eff=(l,r)=>{const s=Math.min(l,r),g=Math.max(l,r);return s+Math.min(g,3*s)};
+const cut=(l,r)=>{const s=Math.min(l,r),g=Math.max(l,r);return Math.max(0,g-3*s)};
+
+const today0=new Date();const TODAY=new Date(today0.getFullYear(),today0.getMonth(),today0.getDate());
+const def={name:'',startDate:iso(TODAY),startL:27.5,startR:66,targetL:50,targetR:150,deadline:'2027-02',actual:{},theme:'clean'};
+let S;
+try{S=Object.assign({},def,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){S=Object.assign({},def)}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+
+function compute(){
+  const start=parse(S.startDate), [Y,M]=S.deadline.split('-').map(Number);
+  const end=new Date(Y,M,0);
+  const weeks=[];let mon=mondayOf(start);
+  while(addD(mon,3)<=end&&weeks.length<120){weeks.push({mon:new Date(mon)});mon=addD(mon,7)}
+  const months=[];
+  weeks.forEach(w=>{const t=addD(w.mon,3);w.ym=t.getFullYear()+'-'+pad(t.getMonth()+1);
+    let m=months.find(x=>x.ym===w.ym);if(!m){m={ym:w.ym,weeks:[]};months.push(m)}m.weeks.push(w)});
+  const S_=months.length*(months.length+1)/2;
+  ['L','R'].forEach(side=>{
+    const st=+S['start'+side], tg=+S['target'+side], total=tg-st;
+    let cumEx=0,prevR=0;
+    months.forEach((m,i)=>{
+      const G=total*(i+1)/S_;
+      const ws=m.weeks.map((_,j)=>1+0.2*j), sw=ws.reduce((a,b)=>a+b,0);
+      m.weeks.forEach((w,j)=>{
+        cumEx+=G*ws[j]/sw;
+        const cr=r05(cumEx);
+        w['t'+side]=r05(cr-prevR);prevR=cr;
+        w['pc'+side]=st+cr; // planned cumulative
+      });
+    });
+  });
+  // 手動で変更した週目標を反映し、累計の計画を作り直す
+  ['L','R'].forEach(side=>{
+    let c=+S['start'+side];const sl=side.toLowerCase();
+    weeks.forEach(w=>{
+      const o=(S.planOver||{})[iso(w.mon)];
+      w['auto'+side]=w['t'+side];
+      if(o&&o[sl]!==''&&o[sl]!=null){w['t'+side]=r05(+o[sl]);w['ov'+side]=true}
+      c+=w['t'+side];w['pc'+side]=c;
+    });
+  });
+  // actual
+  let cl=+S.startL,cr=+S.startR;
+  weeks.forEach(w=>{
+    w.key=iso(w.mon);w.end=addD(w.mon,6);
+    const a=S.actual[w.key]||{};
+    w.al=(a.l===''||a.l==null)?null:+a.l;w.ar=(a.r===''||a.r==null)?null:+a.r;
+    w.past=w.end<TODAY;w.cur=w.mon<=TODAY&&TODAY<=w.end;
+    cl+=w.al||0;cr+=w.ar||0;
+    w.acL=cl;w.acR=cr;w.any=(w.al!=null||w.ar!=null);
+    w.acT=eff(cl,cr);w.pcT=eff(w.pcL,w.pcR);
+    const okL=(w.al||0)>=w.tL-1e-9, okR=(w.ar||0)>=w.tR-1e-9;w.ok=okL&&okR;
+    if(w.past)w.st=w.any?(w.ok?'達成':'未達成'):'未入力';
+    else if(w.cur)w.st=(w.any&&w.ok)?'達成':'進行中';
+    else w.st=w.any?'進行中':'予定';
+  });
+  months.forEach(m=>{
+    m.tL=r05(m.weeks.reduce((a,w)=>a+w.tL,0));m.tR=r05(m.weeks.reduce((a,w)=>a+w.tR,0));
+    m.aL=m.weeks.reduce((a,w)=>a+(w.al||0),0);m.aR=m.weeks.reduce((a,w)=>a+(w.ar||0),0);
+    const allPast=m.weeks.every(w=>w.past), started=m.weeks.some(w=>w.past||w.cur);
+    const hit=m.aL>=m.tL-1e-9&&m.aR>=m.tR-1e-9;
+    m.st=allPast?(hit?'達成':'未達成'):(started?(hit?'達成':'進行中'):'予定');
+  });
+  return {weeks,months,curL:cl,curR:cr};
+}
+
+const tag=s=>{const c={'達成':'t-ok','未達成':'t-ng','進行中':'t-now','予定':'t-wait','未入力':'t-wait'}[s];return `<span class="tag ${c}">${s}</span>`};
+const pct=(a,b)=>b>0?Math.max(0,Math.min(100,a/b*100)):0;
+
+function render(){
+  const D=compute();const {weeks,months}=D;
+  if(!weeks.length){$('summary').innerHTML='<h2>期限と開始日を確認してください</h2>';return}
+  // ---- summary
+  const daysLeft=Math.max(0,Math.round((new Date(+S.deadline.split('-')[0],+S.deadline.split('-')[1],0)-TODAY)/864e5));
+  const remW=weeks.filter(w=>!w.past);
+  const curW=weeks.find(w=>w.cur)||remW[0];
+  const side=(k,cur,st,tg,col)=>{
+    const rate=pct(cur,tg), gainRate=pct(cur-st,tg-st);
+    return `<div><div class="small">${k==='L'?'左':'右'}ポイント</div>
+    <div class="big ${k}">${fmt(cur)} <span class="small">/ 目標 ${fmt(tg)} pt</span></div>
+    <div class="bar"><div style="width:${rate}%;background:var(--${k})"></div></div>
+    <div><b>達成率 ${rate.toFixed(1)}%</b> <span class="small">（目標までの伸び：${gainRate.toFixed(1)}%）</span></div>
+    <div class="small">あと ${fmt(Math.max(0,tg-cur))} pt</div></div>`};
+  $('summary').innerHTML=`<h2>${S.name?esc(S.name)+' さんの':''}達成状況</h2>
+    <div class="two">${side('L',D.curL,+S.startL,+S.targetL)}${side('R',D.curR,+S.startR,+S.targetR)}</div>
+    ${(()=>{const tT=eff(+S.targetL,+S.targetR),cT=eff(D.curL,D.curR),ct=cut(D.curL,D.curR);
+      const longer=D.curL>D.curR?'左':'右';
+      return `<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)">
+      <div class="small">合計ポイント（1：3ルール適用）</div>
+      <div class="big">${fmt(cT)} <span class="small">/ 目標 ${fmt(tT)} pt</span></div>
+      <div class="bar"><div style="width:${pct(cT,tT)}%;background:var(--ok)"></div></div>
+      <div><b>達成率 ${pct(cT,tT).toFixed(1)}%</b> <span class="small">あと ${fmt(Math.max(0,tT-cT))} pt</span></div>
+      ${ct>0?`<div style="color:var(--ng);font-size:13px;margin-top:4px">⚠ ${longer}が多すぎます。${longer}の ${fmt(ct)}pt は合計に入りません（短い方の3倍まで）。短い方を増やしましょう。</div>`:''}
+      </div>`})()}
+    <div class="kpis">
+      <div class="kpi"><span class="small">期限まで</span><b>${daysLeft}日</b></div>
+      <div class="kpi"><span class="small">残り週数</span><b>${remW.length}週</b></div>
+      <div class="kpi"><span class="small">今週の目標(左)</span><b class="L">${curW?'+'+fmt(curW.tL)+' pt':'-'}</b><span class="small">${curW?'獲得 '+fmt(curW.al||0)+' pt':''}</span></div>
+      <div class="kpi"><span class="small">今週の目標(右)</span><b class="R">${curW?'+'+fmt(curW.tR)+' pt':'-'}</b><span class="small">${curW?'獲得 '+fmt(curW.ar||0)+' pt':''}</span></div>
+    </div>`;
+  // ---- advice
+  renderAdvice(D);
+  // ---- charts
+  const labels=['開始',...weeks.map(w=>md(w.mon))];
+  ['L','R'].forEach(k=>{
+    const st=+S['start'+k];
+    const planned=[st,...weeks.map(w=>w['pc'+k])];
+    let lastIdx=-1;weeks.forEach((w,i)=>{if(w.past||w.any||w.cur)lastIdx=i});
+    const act=[st,...weeks.map((w,i)=>i<=lastIdx?w['ac'+k]:null)];
+    $('c'+k).innerHTML=line(labels,planned,act,+S['target'+k],k);
+    $('b'+k).innerHTML=bars(weeks.map(w=>md(w.mon)),weeks.map(w=>w['t'+k]),weeks.map(w=>w['a'+k.toLowerCase()]),k,weeks);
+  });
+  // ---- month table
+  $('monthTbl').innerHTML=`<table><tr><th>月</th><th>左 目標</th><th>左 実績</th><th>右 目標</th><th>右 実績</th><th>月末の目標(左/右)</th><th>月末の合計目標(1:3)</th><th>結果</th></tr>`+
+   months.map(m=>{const last=m.weeks[m.weeks.length-1];
+    return `<tr><td>${+m.ym.slice(5)}月</td><td>+${fmt(m.tL)}</td><td class="L"><b>${sgn(m.aL)}</b></td><td>+${fmt(m.tR)}</td><td class="R"><b>${sgn(m.aR)}</b></td><td>${fmt(last.pcL)} / ${fmt(last.pcR)}</td><td>${fmt(last.pcT)}</td><td>${tag(m.st)}</td></tr>`}).join('')+`</table>`;
+  // ---- week table
+  let h=`<table><tr><th>週</th><th>左 目標</th><th>左 獲得</th><th>右 目標</th><th>右 獲得</th><th>累計(左/右)</th><th>合計(1:3)</th><th>結果</th></tr>`;
+  months.forEach(m=>{h+=`<tr class="mrow"><td colspan="8">${+m.ym.slice(5)}月（目標 左+${fmt(m.tL)} / 右+${fmt(m.tR)}）</td></tr>`;
+    m.weeks.forEach(w=>{h+=`<tr class="${w.cur?'cur':''}"><td>${md(w.mon)}〜${md(w.end)}${w.cur?' ◀今週':''}</td>
+     <td><input type="number" step="0.5" class="${w.ovL?'ov':''}" data-p="l" data-k="${w.key}" value="${fmt(w.tL)}"></td><td><input type="number" step="0.5" data-k="${w.key}" data-s="l" value="${w.al??''}"></td>
+     <td><input type="number" step="0.5" class="${w.ovR?'ov':''}" data-p="r" data-k="${w.key}" value="${fmt(w.tR)}"></td><td><input type="number" step="0.5" data-k="${w.key}" data-s="r" value="${w.ar??''}"></td>
+     <td>${fmt(w.acL)} / ${fmt(w.acR)}</td><td><b>${fmt(w.acT)}</b></td><td>${tag(w.st)}</td></tr>`})});
+  $('weekTbl').innerHTML=h+'</table>';
+  document.querySelectorAll('#weekTbl input').forEach(i=>i.addEventListener('change',e=>{
+    if(e.target.value!=='')e.target.value=r05(+e.target.value);
+    const k=e.target.dataset.k,s=e.target.dataset.s,p=e.target.dataset.p;
+    if(p){ // 週目標の手動変更（空欄にすると自動に戻る）
+      S.planOver=S.planOver||{};S.planOver[k]=S.planOver[k]||{};S.planOver[k][p]=e.target.value;save();render();return}
+    S.actual[k]=S.actual[k]||{};S.actual[k][s]=e.target.value;save();render()}));
+}
+
+function renderAdvice(D){
+  const {weeks,months}=D;
+  const past=weeks.filter(w=>w.past), rem=weeks.filter(w=>!w.past);
+  let h='<h2>⑥ 今週・来週に向けて（自動アドバイス）</h2>';
+  if(!rem.length){
+    const okAll=D.curL>=+S.targetL&&D.curR>=+S.targetR;
+    $('advice').innerHTML=h+`<p>${okAll?'🎉 目標達成おめでとうございます！':'期間が終了しました。結果を振り返って次の目標を立てましょう。'}</p>`;return}
+  const lastPast=past[past.length-1];
+  if(lastPast){
+    const dL=lastPast.acL-lastPast.pcL, dR=lastPast.acR-lastPast.pcR;
+    h+=`<p>先週（${md(lastPast.mon)}〜${md(lastPast.end)}）：${tag(lastPast.st)}　計画との差 <b class="L">左 ${sgn(dL)}</b> / <b class="R">右 ${sgn(dR)}</b></p>`;
+  }else h+='<p class="small">まだ終了した週がありません。今週から記録を始めましょう。</p>';
+  ['L','R'].forEach(k=>{
+    const tg=+S['target'+k], baseTotal=+S['start'+k]+past.reduce((a,w)=>a+(w['a'+k.toLowerCase()]||0),0);
+    const gap=tg-baseTotal, name=k==='L'?'左':'右';
+    if(gap<=0){h+=`<div class="box ${k==='R'?'r':''}"><b>${name}：目標達成済み 🎉</b></div>`;return}
+    const ws=rem.map((_,j)=>1+0.15*j), sw=ws.reduce((a,b)=>a+b,0);
+    const thisW=c05(gap*ws[0]/sw), nextW=rem[1]?c05(gap*ws[1]/sw):null;
+    const orig=rem[0]['t'+k], diff=r05(thisW-orig);
+    const got=rem[0]['a'+k.toLowerCase()]||0;
+    h+=`<div class="box ${k==='R'?'r':''}"><b>${name}</b>：目標まであと <b>${fmt(gap)}pt</b>（残り${rem.length}週）<br>
+     今週の目標は <b>+${fmt(thisW)}pt</b>${rem[0].cur?`（入力済み ${fmt(got)}pt／残り ${fmt(Math.max(0,thisW-got))}pt）`:''}
+     ${nextW!=null?`、来週は <b>+${fmt(nextW)}pt</b>`:''}<br>
+     <span class="small">当初計画 +${fmt(orig)}pt に対して ${diff>0?`<b style="color:var(--ng)">${fmt(diff)}pt 上乗せ</b>が必要`:(diff<0?`<b style="color:var(--ok)">${fmt(-diff)}pt 余裕あり</b>`:'ちょうど計画どおり')}</span></div>`;
+  });
+  if(cut(D.curL,D.curR)>0){const lg=D.curL>D.curR?'左':'右',sh=D.curL>D.curR?'右':'左';
+    h+=`<div class="box" style="border-color:var(--ng)"><b>1：3ルール注意</b>：${lg}が多く、${fmt(cut(D.curL,D.curR))}pt が合計に入っていません。${sh}を増やすと合計が伸びます（${sh}を+1pt増やすと合計は最大+4pt）。</div>`}
+  // monthly view
+  const cm=months.find(m=>m.weeks.some(w=>w.cur))||months.find(m=>m.st!=='達成'&&m.st!=='未達成');
+  if(cm){const fL=Math.max(0,cm.tL-cm.aL),fR=Math.max(0,cm.tR-cm.aR);
+    h+=`<p class="small">${+cm.ym.slice(5)}月の目標まで：左あと ${fmt(fL)}pt／右あと ${fmt(fR)}pt</p>`}
+  h+=`<p class="small">💡 遅れている週は、動く人数（アクション数）を増やすことが一番の近道です。週の初めに「今週は誰に何件連絡するか」を決めましょう。</p>`;
+  $('advice').innerHTML=h;
+}
+
+function line(labels,planned,act,target,k){
+  const W=640,H=270,pl=44,pr=14,pt=14,pb=34, n=labels.length;
+  const vals=[...planned,...act.filter(v=>v!=null),target];
+  let mn=Math.min(...vals),mx=Math.max(...vals);const sp=(mx-mn)||1;mn=Math.floor(mn-sp*.05);mx=Math.ceil(mx+sp*.08);
+  const X=i=>pl+(W-pl-pr)*(n>1?i/(n-1):0), Y=v=>pt+(H-pt-pb)*(1-(v-mn)/(mx-mn));
+  let s=`<svg viewBox="0 0 ${W} ${H}"><text x="${pl}" y="11" font-size="12" fill="var(--sub)">${k==='L'?'左':'右'}（目標 ${fmt(target)}pt）</text>`;
+  for(let i=0;i<=4;i++){const v=mn+(mx-mn)*i/4,y=Y(v);s+=`<line x1="${pl}" x2="${W-pr}" y1="${y}" y2="${y}" stroke="var(--line)"/><text x="${pl-5}" y="${y+4}" font-size="11" text-anchor="end" fill="var(--sub)">${Math.round(v)}</text>`}
+  const step=Math.ceil(n/8);labels.forEach((l,i)=>{if(i%step===0||i===n-1)s+=`<text x="${X(i)}" y="${H-12}" font-size="10.5" text-anchor="middle" fill="var(--sub)">${l}</text>`});
+  s+=`<line x1="${pl}" x2="${W-pr}" y1="${Y(target)}" y2="${Y(target)}" stroke="var(--ok)" stroke-dasharray="3 4"/>`;
+  s+=`<polyline fill="none" stroke="var(--sub)" stroke-opacity=".6" stroke-width="2" stroke-dasharray="6 4" points="${planned.map((v,i)=>X(i)+','+Y(v)).join(' ')}"/>`;
+  const pts=act.map((v,i)=>v==null?null:[X(i),Y(v)]).filter(Boolean);
+  if(pts.length){s+=`<polyline fill="none" stroke="var(--${k})" stroke-width="3" points="${pts.map(p=>p.join(',')).join(' ')}"/>`;
+    pts.forEach(p=>s+=`<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="var(--${k})"/>`)}
+  return s+'</svg>';
+}
+function bars(labels,tg,ac,k,weeks){
+  const W=640,H=250,pl=40,pr=10,pt=14,pb=34,n=labels.length;
+  const mx=Math.max(1,...tg,...ac.map(v=>v||0))*1.15;
+  const gw=(W-pl-pr)/n, bw=Math.min(18,gw*.38), Y=v=>pt+(H-pt-pb)*(1-v/mx);
+  let s=`<svg viewBox="0 0 ${W} ${H}"><text x="${pl}" y="11" font-size="12" fill="var(--sub)">${k==='L'?'左':'右'}：週ごとの 目標(薄) と 獲得(濃)</text>`;
+  for(let i=0;i<=3;i++){const v=mx*i/3,y=Y(v);s+=`<line x1="${pl}" x2="${W-pr}" y1="${y}" y2="${y}" stroke="var(--line)"/><text x="${pl-5}" y="${y+4}" font-size="11" text-anchor="end" fill="var(--sub)">${Math.round(v)}</text>`}
+  const step=Math.ceil(n/10);
+  labels.forEach((l,i)=>{const cx=pl+gw*(i+.5);
+    s+=`<rect x="${cx-bw-1}" y="${Y(tg[i])}" width="${bw}" height="${Y(0)-Y(tg[i])}" fill="var(--${k})" opacity=".3" rx="2"/>`;
+    const a=ac[i];if(a!=null){const good=a>=tg[i]-1e-9;s+=`<rect x="${cx+1}" y="${Y(a)}" width="${bw}" height="${Math.max(1,Y(0)-Y(a))}" fill="var(--${k})" rx="2"/>`;
+      s+=`<text x="${cx+1+bw/2}" y="${Y(a)-3}" font-size="10" text-anchor="middle" fill="var(${good?'--ok':'--ng'})">${good?'○':'×'}</text>`}
+    if(i%step===0)s+=`<text x="${cx}" y="${H-12}" font-size="10.5" text-anchor="middle" fill="var(--sub)">${l}</text>`});
+  return s+'</svg>';
+}
+
+// ---- wiring
+['name','startDate','deadline','startL','startR','targetL','targetR'].forEach(id=>{
+  $(id).value=S[id];
+  $(id).addEventListener('change',e=>{
+    if(e.target.type==='number'&&e.target.value!==''){e.target.value=r05(+e.target.value)}
+    S[id]=e.target.value;save();render()});
+});
+function setTheme(t){S.theme=t;document.documentElement.dataset.theme=t==='clean'?'':t;
+  document.querySelectorAll('.themes button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));save()}
+document.querySelectorAll('.themes button').forEach(b=>b.onclick=()=>setTheme(b.dataset.t));
+$('exp').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(S,null,1)],{type:'application/json'}));
+  a.download='ポイント管理_'+(S.name||'メンバー')+'_'+iso(TODAY)+'.json';a.click()};
+$('imp').onclick=()=>$('file').click();
+$('file').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{try{S=Object.assign({},def,JSON.parse(r.result));save();location.reload()}catch(x){alert('読み込めませんでした')}};r.readAsText(f)};
+$('rstp').onclick=()=>{if(confirm('手動で変えた週ごとの目標をすべて自動配分に戻します。よろしいですか？')){S.planOver={};save();render()}};
+$('rst').onclick=()=>{if(confirm('週ごとの獲得ポイントの入力をすべてリセットします。よろしいですか？')){S.actual={};save();render()}};
+setTheme(S.theme);render();
+</script>
+</body>
+</html>
